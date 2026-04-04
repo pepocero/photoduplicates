@@ -1,0 +1,56 @@
+# Compila la app autocontenida y guarda un ZIP en GitHub (artefacto + opcional Release con tag).
+# La carpeta bin/Publish no va al repo por .gitignore; esta es la forma recomendada de “backup” en GitHub.
+
+name: Publicar backup (win-x64)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: dotnet publish (Release, FolderWin64)
+        run: dotnet publish PhotoDuplicates/PhotoDuplicates.csproj -c Release -p:PublishProfile=FolderWin64
+
+      - name: Empaquetar carpeta publicada en ZIP
+        shell: pwsh
+        run: |
+          $src = "PhotoDuplicates/bin/Publish/win-x64"
+          if (-not (Test-Path $src)) { throw "No existe la salida de publicación: $src" }
+          $zip = "PhotoDuplicates-win-x64-self-contained.zip"
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          # Incluye la carpeta win-x64 completa (misma estructura que al copiar bin/Publish)
+          Compress-Archive -Path $src -DestinationPath $zip -CompressionLevel Optimal
+          Get-Item $zip | Format-List Name, Length
+
+      - name: Subir artefacto (descarga desde pestaña Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PhotoDuplicates-win-x64-self-contained
+          path: PhotoDuplicates-win-x64-self-contained.zip
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Adjuntar ZIP a Release (solo si el disparador es un tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: PhotoDuplicates-win-x64-self-contained.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

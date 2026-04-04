@@ -96,7 +96,15 @@ Conviene mantener en Git una **etiqueta o rama** con el último estado FDD estab
 
 ---
 
-## 7. Referencias
+## 7. Copia de seguridad en GitHub (sin subir `bin/` al repo)
+
+La salida de `dotnet publish` cae bajo `bin/` y suele estar en **`.gitignore`**: no conviene meter binarios en Git (tamaño, ruido, historial).
+
+En este repositorio, el workflow **`.github/workflows/publish-backup.yml`** compila en **GitHub Actions** (`windows-latest`), ejecuta el mismo `dotnet publish` con el perfil autocontenido y sube un **ZIP** como **artefacto** descargable (retención limitada por GitHub). Si el disparador es un **tag** `v*` (p. ej. `v1.0.0`), el ZIP también se adjunta al **Release** asociado al tag (copia más estable que solo el artefacto).
+
+---
+
+## 8. Referencias
 
 - [Implementación desempaquetada con Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/deploy-unpackaged-apps)
 - [Publicar .NET con aplicación autocontenida](https://learn.microsoft.com/dotnet/core/deploying/)
