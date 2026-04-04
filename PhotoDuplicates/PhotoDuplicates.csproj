@@ -42,9 +42,9 @@
     <PublishTrimmed>false</PublishTrimmed>
     <PublishSingleFile>false</PublishSingleFile>
 
-    <!-- Desempaquetado sin copiar el runtime del App SDK en la carpeta (usa el instalado en Windows). -->
+    <!-- true: publicación autocontenida incluye Windows App SDK en la carpeta (no requiere runtime WASDK en el PC). -->
 
-    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
     <WindowsAppSdkUndockedRegFreeWinRTInitialize>true</WindowsAppSdkUndockedRegFreeWinRTInitialize>
 

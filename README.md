@@ -20,9 +20,8 @@ Aplicación de **escritorio para Windows** que ayuda a **localizar fotos duplica
 ## Requisitos
 
 - **Windows 10/11** (64 bits).
-- Para ejecutar la aplicación publicada en modo **dependiente del framework**:
-  - [.NET Desktop Runtime 9](https://dotnet.microsoft.com/download/dotnet/9.0) (x64).
-  - [Windows App Runtime 1.6](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) (x64), alineado con el Windows App SDK del proyecto.
+- La publicación por defecto (`FolderWin64`) es **autocontenida**: la carpeta publicada incluye el runtime .NET y el Windows App SDK; en el PC destino **no** hace falta instalar runtimes por separado (copiar **toda** la carpeta de salida).
+- Si en el futuro se vuelve al modo **dependiente del framework** (más pequeño, requiere runtimes en el sistema): [.NET Desktop Runtime 9](https://dotnet.microsoft.com/download/dotnet/9.0) (x64) y [Windows App Runtime 1.6](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) (x64).
 
 ## Tecnología
 
@@ -33,13 +32,13 @@ Aplicación de **escritorio para Windows** que ayuda a **localizar fotos duplica
 
 Abre `PhotoDuplicates/PhotoDuplicates.csproj` en Visual Studio (carga de trabajo **Desarrollo para el escritorio con .NET** y herramientas WinUI).
 
-Publicación típica (carpeta lista para copiar):
+Publicación típica (carpeta autocontenida lista para copiar):
 
 ```bash
 dotnet publish PhotoDuplicates/PhotoDuplicates.csproj -c Release -p:PublishProfile=FolderWin64
 ```
 
-La salida queda bajo `PhotoDuplicates/bin/Publish/win-x64/`. Copia **toda la carpeta**, no solo el `.exe`.
+La salida queda bajo `PhotoDuplicates/bin/Publish/win-x64/`. Copia **toda la carpeta**, no solo el `.exe`. Punto de restauración antes de autocontenida (modo FDD): etiqueta git `pre-self-contained-fdd`.
 
 ## Créditos
 

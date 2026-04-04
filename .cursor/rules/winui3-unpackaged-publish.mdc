@@ -24,6 +24,10 @@ alwaysApply: false
 - Fallo al **publicar**: revisar salida de `dotnet publish`; VS a veces oculta el error útil. Mensaje típico: *PublishSingleFile requires EnableMsixTooling* → aplicar lo de arriba.
 - Crash al **ejecutar** el publicado: Visor de eventos → si el módulo falla en `...\WindowsApps\Microsoft.WindowsAppRuntime...`, el problema es el **runtime instalado**, no solo la carpeta del exe.
 
+## Modo autocontenido (SelfContained + WindowsAppSDKSelfContained)
+
+Detalle, tabla de errores y SmartScreen/firma: `docs/windows-self-contained-apps.md`.
+
 ## CLI de referencia
 
 `dotnet publish Proyecto.csproj -c Release -p:PublishProfile=NombrePerfil`

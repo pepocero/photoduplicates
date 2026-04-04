@@ -1,0 +1,22 @@
+---
+description: Apps Windows autocontenidas (.NET + WinUI) — propiedades, pubxml, errores típicos, SmartScreen/firma
+globs: "**/*.csproj,**/PublishProfiles/*.pubxml,**/docs/windows-self-contained-apps.md"
+alwaysApply: false
+---
+
+# Autocontenido Windows (.NET + WinUI)
+
+Lee el documento del repo: `docs/windows-self-contained-apps.md` (referencia completa).
+
+## Resumen operativo
+
+- **Autocontenido real (WinUI desempaquetado):** `SelfContained=true` **y** `WindowsAppSDKSelfContained=true`; `RuntimeIdentifier` p. ej. `win-x64`.
+- **Evitar roturas:** `PublishTrimmed=false`, `PublishSingleFile=false`, `EnableMsixTooling=true` con `WindowsPackageType=None` si aplica.
+- **Crash 0xc000027b (Release):** probar `Optimize=false` en `Release` en el `.csproj`.
+- **SmartScreen / “Editor desconocido”:** no se quita con opciones de publicación; hace falta **firma Authenticode** (certificado de código de CA pública) y opcionalmente EV para reputación más rápida; ver sección 5 del doc.
+
+## CLI
+
+`dotnet publish Proyecto.csproj -c Release -p:PublishProfile=Perfil`
+
+Copiar **toda** la carpeta de salida al PC destino.
