@@ -102,6 +102,8 @@ La salida de `dotnet publish` cae bajo `bin/` y suele estar en **`.gitignore`**:
 
 En este repositorio, el workflow **`.github/workflows/publish-backup.yml`** compila en **GitHub Actions** (`windows-latest`), ejecuta el mismo `dotnet publish` con el perfil autocontenido y sube un **ZIP** como **artefacto** descargable (retención limitada por GitHub). Si el disparador es un **tag** `v*` (p. ej. `v1.0.0`), el ZIP también se adjunta al **Release** asociado al tag (copia más estable que solo el artefacto).
 
+**Dónde descargar el ZIP (no hay “sitio web” de la app):** en el repositorio de GitHub, pestaña **Actions** → entra en el workflow **Publicar backup (win-x64)** → abre la **ejecución** con ✓ verde → al final de la página, sección **Artifacts** → descarga **PhotoDuplicates-win-x64-self-contained**. Eso es el backup; descomprime el ZIP y ejecuta `PhotoDuplicates.exe` dentro de la carpeta (o reparte la carpeta completa). Si publicaste con un **tag** `v*`, el mismo archivo suele estar en **Releases** junto a las notas del tag.
+
 ---
 
 ## 8. Referencias

@@ -40,7 +40,7 @@ dotnet publish PhotoDuplicates/PhotoDuplicates.csproj -c Release -p:PublishProfi
 
 La salida queda bajo `PhotoDuplicates/bin/Publish/win-x64/`. Copia **toda la carpeta**, no solo el `.exe`. Punto de restauración antes de autocontenida (modo FDD): etiqueta git `pre-self-contained-fdd`.
 
-La carpeta `bin/` no se sube a Git (`.gitignore`); el ZIP compilado no debe versionarse en el repo. Para **copia de seguridad en GitHub**: en el repositorio, **Actions** → workflow **Publicar backup (win-x64)** → **Run workflow**. El artefacto ZIP se puede descargar desde la ejecución (retención limitada). Si publicas un **tag** `v1.0.0`, el mismo workflow adjunta el ZIP al **Release** de ese tag (copia persistente junto a las notas).
+La carpeta `bin/` no se sube a Git (`.gitignore`); el ZIP compilado no debe versionarse en el repo. Para **copia de seguridad en GitHub**: **Actions** → **Publicar backup (win-x64)** → **Run workflow**. Tras el run con ✓, al **final de la página de esa ejecución**, sección **Artifacts** → descarga **PhotoDuplicates-win-x64-self-contained** (no hay URL de “app alojada”; es un ZIP para descargar y ejecutar en local). Con un **tag** `v1.0.0`, el ZIP también suele estar en **Releases**.
 
 ## Créditos
 
