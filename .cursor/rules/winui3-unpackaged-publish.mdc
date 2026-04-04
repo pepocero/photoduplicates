@@ -1,0 +1,29 @@
+---
+description: WinUI 3 desempaquetado — publicación dotnet/VS, PRI y ejecución (evitar 0xc000027b y fallos MSBuild)
+globs: "**/*.csproj,**/PublishProfiles/*.pubxml"
+alwaysApply: false
+---
+
+# WinUI 3 desempaquetado (WindowsPackageType None)
+
+## Proyecto (.csproj)
+
+- `PublishTrimmed` = **false** (el linker rompe metadatos/reflexión que usa XAML).
+- `PublishSingleFile` = **false** (WinUI + archivo único suele fallar; además dispara requisitos de PRI).
+- `EnableMsixTooling` = **true** para que la cadena de publicación genere **.pri** correctamente; **no** implica empaquetar MSIX si `WindowsPackageType` = `None`.
+- Opcional si hay **0xc000027b** en Release publicado: `Optimize` = **false** solo en `Release` (workaround conocido en WinUI).
+- Modo **dependiente del framework** (`SelfContained=false`): en el PC destino instalar **.NET Desktop Runtime** (misma major que el TFM) y **Windows App Runtime** alineado con la versión del paquete `Microsoft.WindowsAppSDK` (p. ej. 1.6 x64).
+
+## Perfil de publicación (.pubxml)
+
+- `PublishTrimmed` = false, `PublishSingleFile` = false, `PublishReadyToRun` = false salvo necesidad.
+- Documentar en comentarios los runtimes requeridos si es FDD.
+
+## Diagnóstico
+
+- Fallo al **publicar**: revisar salida de `dotnet publish`; VS a veces oculta el error útil. Mensaje típico: *PublishSingleFile requires EnableMsixTooling* → aplicar lo de arriba.
+- Crash al **ejecutar** el publicado: Visor de eventos → si el módulo falla en `...\WindowsApps\Microsoft.WindowsAppRuntime...`, el problema es el **runtime instalado**, no solo la carpeta del exe.
+
+## CLI de referencia
+
+`dotnet publish Proyecto.csproj -c Release -p:PublishProfile=NombrePerfil`

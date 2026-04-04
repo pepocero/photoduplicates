@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- WinUI / Windows App SDK requiere plataforma explícita; dotnet build usa AnyCPU por defecto. -->
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+  </PropertyGroup>
+</Project>
