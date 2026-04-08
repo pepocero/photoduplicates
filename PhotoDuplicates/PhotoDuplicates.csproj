@@ -23,6 +23,7 @@
     <RootNamespace>PhotoDuplicates</RootNamespace>
 
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
 
     <Nullable>enable</Nullable>
 

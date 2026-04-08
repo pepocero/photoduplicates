@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Title="Duplicados de fotos">
 
@@ -67,17 +68,59 @@
             Padding="10"
             Margin="0,0,0,12"
             Background="{ThemeResource LayerFillColorDefaultBrush}">
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="GroupsList">
-                    <ItemsControl.ItemTemplate>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel
+                    x:Name="GroupListPaginatorPanel"
+                    Grid.Row="0"
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                    <TextBlock
+                        x:Name="GroupListPaginatorText"
+                        VerticalAlignment="Center"
+                        TextWrapping="Wrap"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button
+                        x:Name="GroupListPrevButton"
+                        MinWidth="100"
+                        Click="GroupListPrevPage_Click"
+                        Content="« Anterior" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="Grupos por página:"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ComboBox
+                        x:Name="GroupListPageSizeCombo"
+                        MinWidth="88"
+                        SelectionChanged="GroupListPageSizeCombo_SelectionChanged"
+                        AutomationProperties.Name="Grupos por página en la lista" />
+                    <Button
+                        x:Name="GroupListNextButton"
+                        MinWidth="100"
+                        Click="GroupListNextPage_Click"
+                        Content="Siguiente »" />
+                </StackPanel>
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <controls:ItemsRepeater x:Name="GroupsRepeater">
+                    <controls:ItemsRepeater.Layout>
+                        <controls:StackLayout Orientation="Vertical" Spacing="18" />
+                    </controls:ItemsRepeater.Layout>
+                    <controls:ItemsRepeater.ItemTemplate>
+                        <!-- Binding (no x:Bind): x:Bind en plantillas bajo Window provoca SetConverterLookupRoot(MainWindow) y falla (Window no es FrameworkElement). -->
                         <DataTemplate>
-                            <StackPanel Margin="0,0,0,18">
+                            <StackPanel>
                                 <TextBlock
                                     FontWeight="SemiBold"
                                     Margin="0,0,0,8"
                                     Foreground="{StaticResource AppAccentBrush}"
                                     Text="{Binding GroupTitle}" />
-                                <ItemsControl ItemsSource="{Binding Files}">
+                                <ItemsControl ItemsSource="{Binding PageItems}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Margin="0,4">
@@ -123,11 +166,26 @@
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                                <StackPanel
+                                    Margin="0,8,0,0"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    Visibility="{Binding HasMultiplePages, Converter={StaticResource BoolToVisibility}}">
+                                    <Button
+                                        Content="Archivos ←"
+                                        Click="GroupPrevPage_Click"
+                                        IsEnabled="{Binding CanPrevPage}" />
+                                    <Button
+                                        Content="Archivos →"
+                                        Click="GroupNextPage_Click"
+                                        IsEnabled="{Binding CanNextPage}" />
+                                </StackPanel>
                             </StackPanel>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    </controls:ItemsRepeater.ItemTemplate>
+                </controls:ItemsRepeater>
             </ScrollViewer>
+            </Grid>
         </Border>
 
         <StackPanel Grid.Row="5" Orientation="Horizontal">

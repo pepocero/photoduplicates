@@ -10,6 +10,7 @@
                 <controls:XamlControlsResources />
             </ResourceDictionary.MergedDictionaries>
             <local:FilePathBitmapConverter x:Key="FilePathToBitmap" />
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
             <SolidColorBrush x:Key="AppAccentBrush" Color="#0F6CBD" />
             <SolidColorBrush x:Key="AppSecondaryBrush" Color="#107C10" />
             <SolidColorBrush x:Key="AppDangerBrush" Color="#C42B1C" />

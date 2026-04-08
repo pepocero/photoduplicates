@@ -16,7 +16,12 @@ namespace PhotoDuplicates;
 
 public sealed partial class MainWindow : Window
 {
-    private readonly ObservableCollection<DuplicateGroupVm> _groups = new();
+    /// <summary>Cantidad de <em>grupos</em> mostrados por página (estilo paginador; reduce memoria/UI).</summary>
+    private int _groupListPageSize = 50;
+
+    private readonly ObservableCollection<DuplicateGroupVm> _allGroups = new();
+    private readonly ObservableCollection<DuplicateGroupVm> _visibleGroups = new();
+    private int _groupListPageIndex;
     private CancellationTokenSource? _scanCts;
     private Window? _aboutCarliniToolsWindow;
 
@@ -24,7 +29,95 @@ public sealed partial class MainWindow : Window
     {
         this.InitializeComponent();
         Title = "Duplicados de fotos";
-        GroupsList.ItemsSource = _groups;
+        GroupsRepeater.ItemsSource = _visibleGroups;
+        GroupListPageSizeCombo.ItemsSource = new[] { 10, 20, 30, 40, 50, 70 };
+        GroupListPageSizeCombo.SelectedItem = _groupListPageSize;
+    }
+
+    private void GroupListPageSizeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (GroupListPageSizeCombo.SelectedItem is not int n || n <= 0)
+            return;
+        if (n == _groupListPageSize)
+            return;
+
+        var oldSize = _groupListPageSize;
+        _groupListPageSize = n;
+        if (_allGroups.Count > 0)
+        {
+            var firstGroupIndex = _groupListPageIndex * oldSize;
+            _groupListPageIndex = firstGroupIndex / _groupListPageSize;
+        }
+
+        RefreshVisibleGroupListPage();
+        UpdateSummary();
+    }
+
+    private int GroupListPageCount =>
+        _allGroups.Count == 0 ? 0 : Math.Max(1, (int)Math.Ceiling(_allGroups.Count / (double)_groupListPageSize));
+
+    private void RefreshVisibleGroupListPage()
+    {
+        _visibleGroups.Clear();
+        if (_allGroups.Count == 0)
+        {
+            UpdateGroupListPaginatorUi();
+            return;
+        }
+
+        var pages = GroupListPageCount;
+        if (_groupListPageIndex >= pages)
+            _groupListPageIndex = Math.Max(0, pages - 1);
+
+        var start = _groupListPageIndex * _groupListPageSize;
+        var count = Math.Min(_groupListPageSize, _allGroups.Count - start);
+        for (var i = 0; i < count; i++)
+            _visibleGroups.Add(_allGroups[start + i]);
+
+        UpdateGroupListPaginatorUi();
+    }
+
+    private void GoToGroupListPage(int zeroBasedPage)
+    {
+        var max = Math.Max(0, GroupListPageCount - 1);
+        _groupListPageIndex = Math.Clamp(zeroBasedPage, 0, max);
+        RefreshVisibleGroupListPage();
+    }
+
+    private void UpdateGroupListPaginatorUi()
+    {
+        if (_allGroups.Count == 0)
+        {
+            GroupListPaginatorPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        GroupListPaginatorPanel.Visibility = Visibility.Visible;
+        var total = _allGroups.Count;
+        var pages = GroupListPageCount;
+        var from = _groupListPageIndex * _groupListPageSize + 1;
+        var to = Math.Min(_groupListPageIndex * _groupListPageSize + _groupListPageSize, total);
+        GroupListPaginatorText.Text = $"Mostrando grupos {from}–{to} de {total} · Página {_groupListPageIndex + 1} de {pages}";
+        GroupListPrevButton.IsEnabled = _groupListPageIndex > 0;
+        GroupListNextButton.IsEnabled = _groupListPageIndex < pages - 1;
+    }
+
+    private void GroupListPrevPage_Click(object sender, RoutedEventArgs e) =>
+        GoToGroupListPage(_groupListPageIndex - 1);
+
+    private void GroupListNextPage_Click(object sender, RoutedEventArgs e) =>
+        GoToGroupListPage(_groupListPageIndex + 1);
+
+    private void GroupPrevPage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: DuplicateGroupVm vm })
+            vm.PrevPage();
+    }
+
+    private void GroupNextPage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: DuplicateGroupVm vm })
+            vm.NextPage();
     }
 
     private async void BrowseButton_Click(object sender, RoutedEventArgs e)
@@ -136,7 +229,10 @@ public sealed partial class MainWindow : Window
         BrowseButton.IsEnabled = false;
         CancelScanButton.IsEnabled = true;
         DeleteButton.IsEnabled = false;
-        _groups.Clear();
+        _allGroups.Clear();
+        _visibleGroups.Clear();
+        _groupListPageIndex = 0;
+        GroupListPaginatorPanel.Visibility = Visibility.Collapsed;
         ScanProgress.Value = 0;
         ScanProgress.Maximum = 100;
         ScanStatusText.Text = "Preparando…";
@@ -168,12 +264,15 @@ public sealed partial class MainWindow : Window
                 for (var i = 0; i < g.Paths.Count; i++)
                     items.Add(new DuplicateFileItem(g.Paths[i], markedForDeletion: i > 0));
 
-                _groups.Add(new DuplicateGroupVm(g.FingerprintHex, items));
+                _allGroups.Add(new DuplicateGroupVm(g.FingerprintHex, items));
             }
 
-            ScanStatusText.Text = _groups.Count == 0
+            _groupListPageIndex = 0;
+            RefreshVisibleGroupListPage();
+
+            ScanStatusText.Text = _allGroups.Count == 0
                 ? "No se encontraron duplicados."
-                : $"Listo: {_groups.Count} grupo(s) de duplicados.";
+                : $"Listo: {_allGroups.Count} grupo(s) de duplicados.";
         }
         catch (OperationCanceledException)
         {
@@ -191,7 +290,7 @@ public sealed partial class MainWindow : Window
             CancelScanButton.IsEnabled = false;
             _scanCts?.Dispose();
             _scanCts = null;
-            DeleteButton.IsEnabled = _groups.Count > 0;
+            DeleteButton.IsEnabled = _allGroups.Count > 0;
             UpdateSummary();
         }
     }
@@ -204,7 +303,7 @@ public sealed partial class MainWindow : Window
     private async void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
         var paths = new List<string>();
-        foreach (var g in _groups)
+        foreach (var g in _allGroups)
         {
             foreach (var f in g.Files)
             {
@@ -323,13 +422,13 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateSummary();
-        DeleteButton.IsEnabled = _groups.Count > 0 && HasAnyMarked();
+        DeleteButton.IsEnabled = _allGroups.Count > 0 && HasAnyMarked();
     }
 
     private void RemoveDeletedFromUi(IReadOnlyCollection<string> deleted)
     {
         var set = new HashSet<string>(deleted, StringComparer.OrdinalIgnoreCase);
-        foreach (var g in _groups.ToList())
+        foreach (var g in _allGroups.ToList())
         {
             foreach (var f in g.Files.ToList())
             {
@@ -338,13 +437,15 @@ public sealed partial class MainWindow : Window
             }
 
             if (g.Files.Count <= 1)
-                _groups.Remove(g);
+                _allGroups.Remove(g);
         }
+
+        RefreshVisibleGroupListPage();
     }
 
     private bool HasAnyMarked()
     {
-        foreach (var g in _groups)
+        foreach (var g in _allGroups)
         {
             foreach (var f in g.Files)
             {
@@ -358,16 +459,16 @@ public sealed partial class MainWindow : Window
 
     private void UpdateSummary()
     {
-        if (_groups.Count == 0)
+        if (_allGroups.Count == 0)
         {
             SummaryText.Text = "";
             return;
         }
 
         var dupes = 0;
-        foreach (var g in _groups)
+        foreach (var g in _allGroups)
             dupes += Math.Max(0, g.Files.Count - 1);
-        SummaryText.Text = $"{_groups.Count} grupo(s); ~{dupes} archivo(s) redundante(s). Marca cuáles enviar a la papelera (por defecto se conserva uno por grupo).";
+        SummaryText.Text = $"{_allGroups.Count} grupo(s); ~{dupes} archivo(s) redundante(s). Lista paginada: {_groupListPageSize} grupos por página. Marca cuáles enviar a la papelera (por defecto se conserva uno por grupo).";
     }
 
     private async System.Threading.Tasks.Task ShowMessageAsync(string message)
